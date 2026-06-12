@@ -12,7 +12,7 @@ A cloud-native, auto-scaling microservices architecture deployed locally using M
 
 ---
 
-## 📌 Prerequisites
+## Prerequisites
 
 Ensure your environment meets these hardware and software specifications before starting:
 * **OS:** Ubuntu 20.04+ (Virtual Machine or bare-metal)
@@ -24,12 +24,11 @@ Ensure your environment meets these hardware and software specifications before 
 ## 📂 Architecture & Directory Structure
 
 ```text
-cloud-native/
+microk8-shark-main/
 │
 ├── app.py                  # Flask application source code
 ├── requirements.txt        # Python dependencies
 ├── Dockerfile              # Container build instructions
-├── traffic.sh              # Traffic generation script for testing
 │
 ├── k8s/                    # Kubernetes Manifests
 │   ├── deployment.yaml     # App deployment configuration
@@ -37,7 +36,14 @@ cloud-native/
 │   ├── ingress.yaml        # NGINX Ingress routing rules
 │   └── hpa.yaml            # Horizontal Pod Autoscaler configuration
 │
-├── README.md               # Project documentation
+├── static/                 # Resources used in the webpage
+│   ├── honk.mp3            # Sound effect for webpage
+│   └── logo.jpg            # Image of a shark
+│
+├── templates/              # The webpage
+│   └── index.html          
+│
+├── README.md               # Installation guide
 └── REPORT.pdf              # Final project report
 
 ```
@@ -51,12 +57,12 @@ cloud-native/
 
 ---
 
-## ​🚀 Tutorial & Deployment Step
+## Tutorial & Deployment Step
 
 ### 1. Clone Repository
 ```bash
 git clone https://github.com/dr2dp/microk8s-shark.git
-cd cloud-native
+cd microk8-shark-main
 ```
 ---
 
@@ -77,7 +83,10 @@ newgrp microk8s
 microk8s status --wait-ready
 
 # Enable required MicroK8s core add-ons
-microk8s enable dns registry ingress metrics-server
+microk8s enable dns
+microk8s enable registry
+microk8s enable ingress
+microk8s enable metrics-server
 
 # Install and configure the Docker engine
 sudo apt update
@@ -126,9 +135,27 @@ echo "127.0.0.1 flask-app.local" | sudo tee -a /etc/hosts
 microk8s kubectl wait --for=condition=ready pod -l app=flask-app --timeout=60s
 
 # Test cluster ingress responsiveness
-curl [http://flask-app.local/](http://flask-app.local/)
+curl http://flask-app.local/info
+
+```
+---
+
+
+### Extra - How to show the webpage
+```bash
+# Enable MetalLB with an IP range
+microk8s enable metallb:10.64.140.43-10.64.140.49
+
+# Find flask-app-service Cluster-IP
+microk8s kubectl get svc 
+
+# SSH to tunnel to your machine
+ssh -L 8080:$FLASK_APP_SERVICE_IP:80 $VM_USER@localhost -p 8822
+# Example:ssh -L 8080:10.152.183.44:80 dr2dp@localhost -p 8822
+
+# Access Through a Web Browser
+http://flask-app.local:8080/
 
 ```
 
 ---
-
